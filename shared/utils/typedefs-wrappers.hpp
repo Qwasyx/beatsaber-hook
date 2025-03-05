@@ -96,8 +96,11 @@ struct CountPointer {
             Counter::add(ptr);
         }
     }
-    /// @brief Move constructor is default, moves the pointer and keeps the reference count the same.
-    CountPointer(CountPointer&& other) = default;
+    /// @brief Move constructor moves the pointer and keeps the reference count the same.
+    CountPointer(CountPointer&& other) {
+        ptr = other.ptr;
+        other.ptr = nullptr;
+    }
     /// @brief Destructor, decreases the ref count for the held non-null pointer.
     ~CountPointer() {
         if (ptr) {
