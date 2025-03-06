@@ -270,8 +270,14 @@ struct SafePtr {
     /// @brief Destructor. Destroys the internal wrapper type, if necessary.
     /// Aborts if a wrapper type exists and must be freed, yet GC_free does not exist.
     ~SafePtr() {
+        clear();
+    }
+
+    /// @brief Destroys the internal wrapper type, if necessary.
+    /// Aborts if a wrapper type exists and must be freed, yet GC_free does not exist.
+    inline void clear() {
         if (!internalHandle) {
-            // Destructor without an internal handle is trivial
+            // Clearing up without an internal handle is trivial
             return;
         }
         // If our internal handle has 1 instance, we need to clean up the instance it points to.
@@ -287,19 +293,22 @@ struct SafePtr {
             il2cpp_functions::GC_free(internalHandle.__internal_get());
             #endif
         }
+
+        // ensure we don't try to clear the same handle twice
+        internalHandle = nullptr;
     }
 
     /// @brief Emplace a new value into this SafePtr, freeing an existing one, if it exists.
     /// @param other The instance to emplace.
     inline void emplace(T& other) {
-        this->~SafePtr();
+        clear();
         internalHandle = SafePointerWrapper::New(std::addressof(other));
     }
 
     /// @brief Emplace a new value into this SafePtr, freeing an existing one, if it exists.
     /// @param other The instance to emplace.
     inline void emplace(T* other) {
-        this->~SafePtr();
+        clear();
         internalHandle = SafePointerWrapper::New(other);
     }
 
@@ -307,7 +316,7 @@ struct SafePtr {
     /// @param other The CountPointer to copy during the emplace.
     inline void emplace(CountPointer<T>& other) {
         // Clear existing instance as necessary
-        this->~SafePtr();
+        clear();
         // Copy other into handle
         internalHandle = other;
     }
@@ -316,7 +325,7 @@ struct SafePtr {
     /// @param other The CountPointer to move during this call.
     inline void move(CountPointer<T>& other) {
         // Clear existing instance as necessary
-        this->~SafePtr();
+        clear();
         // Move into handle
         internalHandle = std::move(other);
     }
